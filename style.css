@@ -1,6 +1,4 @@
-/* -----------------------------
-   General Body Styling
------------------------------ */
+/* General Styling */
 body {
     font-family: Arial, sans-serif;
     background-color: #1a1a2e;
@@ -10,9 +8,7 @@ body {
     text-align: center;
 }
 
-/* -----------------------------
-   Start Page
------------------------------ */
+/* Start Page */
 #start-page {
     display: flex;
     flex-direction: column;
@@ -38,6 +34,7 @@ body {
     margin-bottom: 20px;
 }
 
+/* Buttons */
 button {
     padding: 10px 20px;
     font-size: 16px;
@@ -53,9 +50,7 @@ button:hover {
     background-color: #6a6af0;
 }
 
-/* -----------------------------
-   Username Page
------------------------------ */
+/* Username Input */
 #username-page input {
     padding: 10px;
     font-size: 16px;
@@ -64,9 +59,7 @@ button:hover {
     margin-right: 10px;
 }
 
-/* -----------------------------
-   Game Area Grid
------------------------------ */
+/* Game Grid */
 #game-area {
     display: inline-block;
     margin-top: 20px;
@@ -93,9 +86,7 @@ button:hover {
     height: 80%;
 }
 
-/* -----------------------------
-   Level Selection
------------------------------ */
+/* Level Select */
 #level-select {
     margin-top: 20px;
 }
@@ -104,17 +95,13 @@ button:hover {
     margin: 0 5px;
 }
 
-/* -----------------------------
-   Timer
------------------------------ */
+/* Timer */
 #timer {
     font-size: 18px;
     margin-top: 10px;
 }
 
-/* -----------------------------
-   Leaderboard
------------------------------ */
+/* Leaderboard */
 #leaderboard {
     list-style: none;
     padding: 0;
@@ -126,9 +113,7 @@ button:hover {
     margin: 5px 0;
 }
 
-/* -----------------------------
-   Footer / Branding
------------------------------ */
+/* Footer / Branding */
 #game-footer {
     text-align: center;
     margin-top: 30px;
