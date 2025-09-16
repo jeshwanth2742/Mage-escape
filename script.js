@@ -1,5 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
-import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
+import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
 
 // Firebase Config
 const firebaseConfig = {
@@ -11,7 +11,6 @@ const firebaseConfig = {
   appId: "1:108481604:web:d5064e43d4eb6abd68c011",
   measurementId: "G-HV0WFYR4CB"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -30,28 +29,6 @@ let magePos = { x: 0, y: 0 };
 let username = '';
 let timer = 0;
 let timerInterval = null;
-
-// Level definitions with walls
-const levels = {
-  easy: [
-    ['S', '', ''],
-    ['', 'W', ''],
-    ['', '', 'E']
-  ],
-  medium: [
-    ['S', '', 'W', ''],
-    ['W', '', 'W', ''],
-    ['', '', '', 'W'],
-    ['', 'W', '', 'E']
-  ],
-  hard: [
-    ['S','W','','W',''],
-    ['','W','','W',''],
-    ['','','W','','W'],
-    ['W','','W','',''],
-    ['','','','W','E']
-  ]
-};
 
 // Start page
 startBtn.addEventListener('click', () => {
@@ -80,7 +57,7 @@ levelBtns.forEach(btn => {
 });
 
 // Start Game
-function startGame(levelName) {
+function startGame(levelName){
   gameArea.innerHTML = '';
   timer = 0;
   magePos = findCell('S');
@@ -95,24 +72,24 @@ function startGame(levelName) {
 
   document.addEventListener('keydown', handleMovement);
 
-  if (timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    timer += 0.1;
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    timer+=0.1;
     timerDisplay.textContent = `Time: ${timer.toFixed(1)}s`;
-  }, 100);
+  },100);
 }
 
 // Render grid
-function renderGrid() {
-  currentLevelMatrix.forEach((row, y) => {
+function renderGrid(){
+  currentLevelMatrix.forEach((row,y)=>{
     const rowDiv = document.createElement('div');
     rowDiv.classList.add('row');
-    row.forEach((cell, x) => {
+    row.forEach((cell,x)=>{
       const cellDiv = document.createElement('div');
       cellDiv.classList.add('cell');
       cellDiv.dataset.x = x;
       cellDiv.dataset.y = y;
-      if(cell === 'W') cellDiv.classList.add('wall');
+      if(cell==='W' || cell==='1') cellDiv.classList.add('wall');
       rowDiv.appendChild(cellDiv);
     });
     gameArea.appendChild(rowDiv);
@@ -120,20 +97,20 @@ function renderGrid() {
 }
 
 // Helpers
-function findCell(symbol) {
-  for (let y = 0; y < currentLevelMatrix.length; y++) {
-    for (let x = 0; x < currentLevelMatrix[y].length; x++) {
-      if (currentLevelMatrix[y][x] === symbol) return { x, y };
+function findCell(symbol){
+  for(let y=0;y<currentLevelMatrix.length;y++){
+    for(let x=0;x<currentLevelMatrix[y].length;x++){
+      if(currentLevelMatrix[y][x]===symbol) return {x,y};
     }
   }
   return null;
 }
 
-function getCell(x, y) {
+function getCell(x,y){
   return gameArea.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
 }
 
-function makeImage(filename) {
+function makeImage(filename){
   const img = document.createElement('img');
   img.src = `assets/${filename}`;
   img.alt = filename;
@@ -141,80 +118,70 @@ function makeImage(filename) {
 }
 
 // Movement
-function handleMovement(e) {
-  const moves = { ArrowUp:[0,-1], ArrowDown:[0,1], ArrowLeft:[-1,0], ArrowRight:[1,0] };
-  if (!moves[e.key]) return;
-
+function handleMovement(e){
+  const moves = {ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0]};
+  if(!moves[e.key]) return;
   const [dx,dy] = moves[e.key];
   const newX = magePos.x + dx;
   const newY = magePos.y + dy;
 
-  // Check boundaries
-  if(newY<0 || newY>=currentLevelMatrix.length || newX<0 || newX>=currentLevelMatrix[0].length) return;
+  if(newY<0||newY>=currentLevelMatrix.length||newX<0||newX>=currentLevelMatrix[0].length) return;
 
-  // Check walls
-  if(currentLevelMatrix[newY][newX] === 'W') return;
+  const nextCellValue = currentLevelMatrix[newY][newX];
+  if(nextCellValue==='W' || nextCellValue==='1') return; // wall
 
-  // Move mage
-  const currentCell = getCell(magePos.x, magePos.y);
-  const nextCell = getCell(newX, newY);
+  const currentCell = getCell(magePos.x,magePos.y);
+  const nextCell = getCell(newX,newY);
   const mageImg = currentCell.querySelector('img');
   if(mageImg){
     nextCell.appendChild(mageImg);
-    magePos = {x:newX,y:newY};
+    magePos={x:newX,y:newY};
 
-    // Check goal
-    if(currentLevelMatrix[newY][newX] === 'E'){
-      endGame();
-    }
+    if(nextCellValue==='E') endGame();
   }
 }
 
 // End game
-function endGame() {
+function endGame(){
   clearInterval(timerInterval);
   document.removeEventListener('keydown', handleMovement);
-  saveScore(username, getCurrentLevelName(), parseFloat(timer.toFixed(1)));
+  saveScore(username,getCurrentLevelName(),parseFloat(timer.toFixed(1)));
 }
 
-// Get level name
-function getCurrentLevelName() {
-  return Object.entries(levels).find(([, matrix]) => matrix === currentLevelMatrix)[0];
+// Current level name
+function getCurrentLevelName(){
+  return Object.entries(levels).find(([,matrix])=>matrix===currentLevelMatrix)[0];
 }
 
-// Save score (best time per user per level)
-async function saveScore(username, level, time) {
-  const docRef = doc(db, 'scores', `${username}_${level}`);
+// Save score to Firestore
+async function saveScore(username,level,time){
+  const docRef = doc(db,'scores',`${username}_${level}`);
   const docSnap = await getDoc(docRef);
-
-  if(!docSnap.exists() || time < docSnap.data().time){
-    await setDoc(docRef, { username, level, time, updated: new Date() });
+  if(!docSnap.exists()||time<docSnap.data().time){
+    await setDoc(docRef,{username,level,time,updated:new Date()});
   }
-
   showLeaderboard(level);
 }
 
 // Show leaderboard
 async function showLeaderboard(level){
-  leaderboard.innerHTML = '<h2>Leaderboard</h2>';
-  const q = query(collection(db,'scores'), orderBy('time','asc'));
+  leaderboard.innerHTML='<h2>Leaderboard</h2>';
+  const q = query(collection(db,'scores'),orderBy('time','asc'));
   const snapshot = await getDocs(q);
-
-  let html = '<table><tr><th>Rank</th><th>Username</th><th>Time (s)</th></tr>';
-  let rank = 1;
-  snapshot.forEach(doc => {
+  let html='<table><tr><th>Rank</th><th>Username</th><th>Time(s)</th></tr>';
+  let rank=1;
+  snapshot.forEach(doc=>{
     const data = doc.data();
-    if(data.level === level){
-      html += `<tr><td>${rank++}</td><td>${data.username}</td><td>${data.time}</td></tr>`;
+    if(data.level===level){
+      html+=`<tr><td>${rank++}</td><td>${data.username}</td><td>${data.time}</td></tr>`;
     }
   });
-  html += '</table>';
-  leaderboard.innerHTML += html;
-  leaderboard.style.display = 'block';
-  gameArea.style.display = 'none';
+  html+='</table>';
+  leaderboard.innerHTML+=html;
+  leaderboard.style.display='block';
+  gameArea.style.display='none';
 }
 
 // Footer
-footer.innerHTML = `Built by @xiipher <img src="assets/logo.png" alt="Anoma logo" /> Intent Games`;
-
+footer.innerHTML=`Built by @xiipher <img
 
