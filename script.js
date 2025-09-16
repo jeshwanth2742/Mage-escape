@@ -1,14 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  query,
-  orderBy,
-  limit,
-  getDocs
-} from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
+import { getFirestore, doc, setDoc, getDoc, collection, query, orderBy, limit, getDocs } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
 
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCiKGqhSSCVQ3GPtnMA1DZSzemXLWoBM1M",
   authDomain: "preepclicker.firebaseapp.com",
@@ -22,28 +15,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const levels = {
-  easy: [
-    ['S', '', ''],
-    ['', '', ''],
-    ['', '', 'E']
-  ],
-  medium: [
-    ['S', '', '', ''],
-    ['', '', '', ''],
-    ['', '', '', ''],
-    ['', '', '', 'E']
-  ],
-  hard: [
-    ['S', '', '', '', ''],
-    ['', '', '', '', ''],
-    ['', '', '', '', ''],
-    ['', '', '', '', ''],
-    ['', '', '', '', 'E']
-  ]
-};
-
-// DOM elements
+// DOM Elements
 const startBtn = document.getElementById('start-btn');
 const usernameInput = document.getElementById('username-input');
 const playBtn = document.getElementById('play-btn');
@@ -59,18 +31,43 @@ let username = '';
 let timer = 0;
 let timerInterval = null;
 
+// Level definitions with walls
+const levels = {
+  easy: [
+    ['S', '', ''],
+    ['', 'W', ''],
+    ['', '', 'E']
+  ],
+  medium: [
+    ['S', '', 'W', ''],
+    ['W', '', 'W', ''],
+    ['', '', '', 'W'],
+    ['', 'W', '', 'E']
+  ],
+  hard: [
+    ['S','W','','W',''],
+    ['','W','','W',''],
+    ['','','W','','W'],
+    ['W','','W','',''],
+    ['','','','W','E']
+  ]
+};
+
+// Start page
 startBtn.addEventListener('click', () => {
   document.getElementById('start-page').style.display = 'none';
-  document.getElementById('username-page').style.display = 'block';
+  document.getElementById('username-page').style.display = 'flex';
 });
 
+// Username page
 playBtn.addEventListener('click', () => {
   username = usernameInput.value.trim();
-  if (!username) return alert('Please enter a username.');
+  if (!username) return alert('Enter username');
   document.getElementById('username-page').style.display = 'none';
-  document.getElementById('level-select-page').style.display = 'block';
+  document.getElementById('level-select-page').style.display = 'flex';
 });
 
+// Level selection
 levelBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     const levelName = btn.dataset.level;
@@ -78,17 +75,35 @@ levelBtns.forEach(btn => {
     document.getElementById('level-select-page').style.display = 'none';
     gameArea.style.display = 'block';
     leaderboard.style.display = 'none';
-    startGame();
+    startGame(levelName);
   });
 });
 
-function startGame() {
-  gameArea.innerHTML = ''; // Clear grid
-  timerDisplay.textContent = '0';
+// Start Game
+function startGame(levelName) {
+  gameArea.innerHTML = '';
   timer = 0;
   magePos = findCell('S');
+  renderGrid();
 
-  // Create grid based on level matrix
+  // Place mage
+  getCell(magePos.x, magePos.y).appendChild(makeImage('mage.png'));
+
+  // Place goal
+  const goalPos = findCell('E');
+  getCell(goalPos.x, goalPos.y).appendChild(makeImage('goal.png'));
+
+  document.addEventListener('keydown', handleMovement);
+
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timer += 0.1;
+    timerDisplay.textContent = `Time: ${timer.toFixed(1)}s`;
+  }, 100);
+}
+
+// Render grid
+function renderGrid() {
   currentLevelMatrix.forEach((row, y) => {
     const rowDiv = document.createElement('div');
     rowDiv.classList.add('row');
@@ -97,35 +112,14 @@ function startGame() {
       cellDiv.classList.add('cell');
       cellDiv.dataset.x = x;
       cellDiv.dataset.y = y;
-
-      if (cell === 'S') cellDiv.classList.add('start');
-      if (cell === 'E') cellDiv.classList.add('goal');
-
+      if(cell === 'W') cellDiv.classList.add('wall');
       rowDiv.appendChild(cellDiv);
     });
     gameArea.appendChild(rowDiv);
   });
-
-  // Place mage img on start cell
-  const startCell = getCell(magePos.x, magePos.y);
-  startCell.appendChild(makeImage('mage.png', 'mage'));
-
-  // Place goal img on goal cell
-  const goalPos = findCell('E');
-  getCell(goalPos.x, goalPos.y).appendChild(makeImage('goal.png', 'goal'));
-
-  // Attach movement listener
-  document.addEventListener('keydown', handleMovement);
-
-  // Start timer
-  if (timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    timer++;
-    timerDisplay.textContent = timer;
-  }, 1000);
 }
 
-// Find coordinates of a cell with specific symbol in matrix
+// Helpers
 function findCell(symbol) {
   for (let y = 0; y < currentLevelMatrix.length; y++) {
     for (let x = 0; x < currentLevelMatrix[y].length; x++) {
@@ -139,90 +133,78 @@ function getCell(x, y) {
   return gameArea.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
 }
 
-function makeImage(src, className) {
+function makeImage(filename) {
   const img = document.createElement('img');
-  img.src = `assets/${src}`;
-  img.className = className;
-  img.alt = className;
+  img.src = `assets/${filename}`;
+  img.alt = filename;
   return img;
 }
 
+// Movement
 function handleMovement(e) {
-  const directions = {
-    ArrowUp: { dx: 0, dy: -1 },
-    ArrowDown: { dx: 0, dy: 1 },
-    ArrowLeft: { dx: -1, dy: 0 },
-    ArrowRight: { dx: 1, dy: 0 }
-  };
+  const moves = { ArrowUp:[0,-1], ArrowDown:[0,1], ArrowLeft:[-1,0], ArrowRight:[1,0] };
+  if (!moves[e.key]) return;
 
-  if (!directions[e.key]) return;
+  const [dx,dy] = moves[e.key];
+  const newX = magePos.x + dx;
+  const newY = magePos.y + dy;
 
-  const newX = magePos.x + directions[e.key].dx;
-  const newY = magePos.y + directions[e.key].dy;
+  // Check boundaries
+  if(newY<0 || newY>=currentLevelMatrix.length || newX<0 || newX>=currentLevelMatrix[0].length) return;
 
-  // Boundary check
-  if (
-    newY < 0 ||
-    newY >= currentLevelMatrix.length ||
-    newX < 0 ||
-    newX >= currentLevelMatrix[0].length
-  )
-    return;
+  // Check walls
+  if(currentLevelMatrix[newY][newX] === 'W') return;
 
-  // Move mage image if target cell exists
+  // Move mage
   const currentCell = getCell(magePos.x, magePos.y);
   const nextCell = getCell(newX, newY);
-  if (currentCell && nextCell) {
-    const mageImg = currentCell.querySelector('.mage');
-    if (mageImg) {
-      nextCell.appendChild(mageImg);
-      magePos = { x: newX, y: newY };
+  const mageImg = currentCell.querySelector('img');
+  if(mageImg){
+    nextCell.appendChild(mageImg);
+    magePos = {x:newX,y:newY};
 
-      if (currentLevelMatrix[newY][newX] === 'E') {
-        endGame();
-      }
+    // Check goal
+    if(currentLevelMatrix[newY][newX] === 'E'){
+      endGame();
     }
   }
 }
 
+// End game
 function endGame() {
   clearInterval(timerInterval);
   document.removeEventListener('keydown', handleMovement);
-  saveScore(username, getCurrentLevelName(), timer);
+  saveScore(username, getCurrentLevelName(), parseFloat(timer.toFixed(1)));
 }
 
+// Get level name
 function getCurrentLevelName() {
   return Object.entries(levels).find(([, matrix]) => matrix === currentLevelMatrix)[0];
 }
 
+// Save score (best time per user per level)
 async function saveScore(username, level, time) {
-  try {
-    await addDoc(collection(db, 'scores'), {
-      username,
-      level,
-      time,
-      created: new Date()
-    });
-    showLeaderboard(level);
-  } catch (err) {
-    alert('Error saving score: ' + err.message);
+  const docRef = doc(db, 'scores', `${username}_${level}`);
+  const docSnap = await getDoc(docRef);
+
+  if(!docSnap.exists() || time < docSnap.data().time){
+    await setDoc(docRef, { username, level, time, updated: new Date() });
   }
+
+  showLeaderboard(level);
 }
 
-async function showLeaderboard(level) {
+// Show leaderboard
+async function showLeaderboard(level){
   leaderboard.innerHTML = '<h2>Leaderboard</h2>';
-  const q = query(
-    collection(db, 'scores'),
-    orderBy('time', 'asc'),
-    limit(20)
-  );
-
+  const q = query(collection(db,'scores'), orderBy('time','asc'));
   const snapshot = await getDocs(q);
+
   let html = '<table><tr><th>Rank</th><th>Username</th><th>Time (s)</th></tr>';
   let rank = 1;
   snapshot.forEach(doc => {
     const data = doc.data();
-    if (data.level === level) {
+    if(data.level === level){
       html += `<tr><td>${rank++}</td><td>${data.username}</td><td>${data.time}</td></tr>`;
     }
   });
@@ -232,5 +214,7 @@ async function showLeaderboard(level) {
   gameArea.style.display = 'none';
 }
 
-footer.innerHTML = `Built by @xiipher <img src="assets/logo.png" alt="Anoma logo" height="24" /> Intent Games`;
+// Footer
+footer.innerHTML = `Built by @xiipher <img src="assets/logo.png" alt="Anoma logo" /> Intent Games`;
+
 
