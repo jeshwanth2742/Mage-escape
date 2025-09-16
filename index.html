@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mage Escape</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="assets/logo.png" type="image/png">
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="assets/logo.png" type="image/png" />
 </head>
 <body>
   <!-- Starting Page -->
   <section id="start-page" style="display:block;">
     <div class="logo-container">
-      <img src="assets/mage.png" alt="Mage" class="glow">
+      <!-- Changed to start.png as the start logo -->
+      <img src="assets/start.png" alt="Start Logo" class="glow" />
     </div>
     <h1>Mage Escape</h1>
     <button id="start-btn">Start Game</button>
@@ -20,7 +21,7 @@
   <!-- Username Input -->
   <section id="username-page" style="display:none;">
     <h2>Enter Username</h2>
-    <input type="text" id="username-input" placeholder="Username">
+    <input type="text" id="username-input" placeholder="Username" />
     <button id="play-btn">Play</button>
   </section>
 
@@ -35,19 +36,18 @@
   <!-- Game Area -->
   <section id="game-area" style="display:none;">
     <div id="timer">0</div>
-    <!-- Grid will appear here dynamically -->
+    <!-- Dynamic game grid appears here -->
   </section>
 
   <!-- Leaderboard -->
   <section id="leaderboard" style="display:none;">
-    <!-- Leaderboard will be rendered here dynamically -->
+    <!-- Leaderboard entries will render here -->
   </section>
 
-  <!-- Footer / Branding -->
-  <footer id="footer">
-    <!-- Filled by script.js on load -->
-  </footer>
+  <!-- Footer -->
+  <footer id="footer"></footer>
 
   <script type="module" src="script.js"></script>
 </body>
 </html>
+
