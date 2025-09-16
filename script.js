@@ -22,7 +22,28 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// DOM Elements
+const levels = {
+  easy: [
+    ['S', '', ''],
+    ['', '', ''],
+    ['', '', 'E']
+  ],
+  medium: [
+    ['S', '', '', ''],
+    ['', '', '', ''],
+    ['', '', '', ''],
+    ['', '', '', 'E']
+  ],
+  hard: [
+    ['S', '', '', '', ''],
+    ['', '', '', '', ''],
+    ['', '', '', '', ''],
+    ['', '', '', '', ''],
+    ['', '', '', '', 'E']
+  ]
+};
+
+// DOM elements
 const startBtn = document.getElementById('start-btn');
 const usernameInput = document.getElementById('username-input');
 const playBtn = document.getElementById('play-btn');
@@ -32,14 +53,12 @@ const timerDisplay = document.getElementById('timer');
 const leaderboard = document.getElementById('leaderboard');
 const footer = document.getElementById('footer');
 
-let currentLevel = null;
-let gridSize = 3;
+let currentLevelMatrix = null;
+let magePos = { x: 0, y: 0 };
 let username = '';
 let timer = 0;
 let timerInterval = null;
-let magePos = { x: 0, y: 0 };
 
-// Event Listeners for navigation
 startBtn.addEventListener('click', () => {
   document.getElementById('start-page').style.display = 'none';
   document.getElementById('username-page').style.display = 'block';
@@ -52,10 +71,10 @@ playBtn.addEventListener('click', () => {
   document.getElementById('level-select-page').style.display = 'block';
 });
 
-levelBtns.forEach((btn) => {
+levelBtns.forEach(btn => {
   btn.addEventListener('click', () => {
-    currentLevel = btn.dataset.level;
-    gridSize = currentLevel === 'easy' ? 3 : currentLevel === 'medium' ? 4 : 5;
+    const levelName = btn.dataset.level;
+    currentLevelMatrix = levels[levelName];
     document.getElementById('level-select-page').style.display = 'none';
     gameArea.style.display = 'block';
     leaderboard.style.display = 'none';
@@ -63,38 +82,39 @@ levelBtns.forEach((btn) => {
   });
 });
 
-// Game setup and logic
 function startGame() {
-  gameArea.innerHTML = ''; // Clear any existing grid
+  gameArea.innerHTML = ''; // Clear grid
   timerDisplay.textContent = '0';
   timer = 0;
-  magePos = { x: 0, y: 0 };
+  magePos = findCell('S');
 
-  // Create grid
-  for (let y = 0; y < gridSize; y++) {
-    const row = document.createElement('div');
-    row.classList.add('row');
-    for (let x = 0; x < gridSize; x++) {
-      const cell = document.createElement('div');
-      cell.classList.add('cell');
-      cell.dataset.x = x;
-      cell.dataset.y = y;
+  // Create grid based on level matrix
+  currentLevelMatrix.forEach((row, y) => {
+    const rowDiv = document.createElement('div');
+    rowDiv.classList.add('row');
+    row.forEach((cell, x) => {
+      const cellDiv = document.createElement('div');
+      cellDiv.classList.add('cell');
+      cellDiv.dataset.x = x;
+      cellDiv.dataset.y = y;
 
-      if (x === 0 && y === 0) cell.classList.add('start');
-      if (x === gridSize - 1 && y === gridSize - 1) cell.classList.add('goal');
-      row.appendChild(cell);
-    }
-    gameArea.appendChild(row);
-  }
+      if (cell === 'S') cellDiv.classList.add('start');
+      if (cell === 'E') cellDiv.classList.add('goal');
 
-  // Place mage and goal images
-  const startCell = document.querySelector('.cell.start');
-  const goalCell = document.querySelector('.cell.goal');
+      rowDiv.appendChild(cellDiv);
+    });
+    gameArea.appendChild(rowDiv);
+  });
 
+  // Place mage img on start cell
+  const startCell = getCell(magePos.x, magePos.y);
   startCell.appendChild(makeImage('mage.png', 'mage'));
-  goalCell.appendChild(makeImage('goal.png', 'goal'));
 
-  // Start listening to key presses
+  // Place goal img on goal cell
+  const goalPos = findCell('E');
+  getCell(goalPos.x, goalPos.y).appendChild(makeImage('goal.png', 'goal'));
+
+  // Attach movement listener
   document.addEventListener('keydown', handleMovement);
 
   // Start timer
@@ -103,6 +123,20 @@ function startGame() {
     timer++;
     timerDisplay.textContent = timer;
   }, 1000);
+}
+
+// Find coordinates of a cell with specific symbol in matrix
+function findCell(symbol) {
+  for (let y = 0; y < currentLevelMatrix.length; y++) {
+    for (let x = 0; x < currentLevelMatrix[y].length; x++) {
+      if (currentLevelMatrix[y][x] === symbol) return { x, y };
+    }
+  }
+  return null;
+}
+
+function getCell(x, y) {
+  return gameArea.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
 }
 
 function makeImage(src, className) {
@@ -123,22 +157,30 @@ function handleMovement(e) {
 
   if (!directions[e.key]) return;
 
-  let nx = magePos.x + directions[e.key].dx;
-  let ny = magePos.y + directions[e.key].dy;
+  const newX = magePos.x + directions[e.key].dx;
+  const newY = magePos.y + directions[e.key].dy;
 
-  if (nx < 0 || nx >= gridSize || ny < 0 || ny >= gridSize) return;
+  // Boundary check
+  if (
+    newY < 0 ||
+    newY >= currentLevelMatrix.length ||
+    newX < 0 ||
+    newX >= currentLevelMatrix[0].length
+  )
+    return;
 
-  const currentCell = document.querySelector(`.cell[data-x="${magePos.x}"][data-y="${magePos.y}"]`);
-  const nextCell = document.querySelector(`.cell[data-x="${nx}"][data-y="${ny}"]`);
-  const mageImg = currentCell.querySelector('.mage');
+  // Move mage image if target cell exists
+  const currentCell = getCell(magePos.x, magePos.y);
+  const nextCell = getCell(newX, newY);
+  if (currentCell && nextCell) {
+    const mageImg = currentCell.querySelector('.mage');
+    if (mageImg) {
+      nextCell.appendChild(mageImg);
+      magePos = { x: newX, y: newY };
 
-  if (mageImg) {
-    nextCell.appendChild(mageImg);
-    magePos = { x: nx, y: ny };
-
-    // Check for goal reached
-    if (nx === gridSize - 1 && ny === gridSize - 1) {
-      endGame();
+      if (currentLevelMatrix[newY][newX] === 'E') {
+        endGame();
+      }
     }
   }
 }
@@ -146,20 +188,24 @@ function handleMovement(e) {
 function endGame() {
   clearInterval(timerInterval);
   document.removeEventListener('keydown', handleMovement);
-  saveScore(username, currentLevel, timer);
+  saveScore(username, getCurrentLevelName(), timer);
+}
+
+function getCurrentLevelName() {
+  return Object.entries(levels).find(([, matrix]) => matrix === currentLevelMatrix)[0];
 }
 
 async function saveScore(username, level, time) {
   try {
     await addDoc(collection(db, 'scores'), {
-      username: username,
-      level: level,
-      time: time,
+      username,
+      level,
+      time,
       created: new Date()
     });
     showLeaderboard(level);
-  } catch (error) {
-    alert('Error saving score: ' + error.message);
+  } catch (err) {
+    alert('Error saving score: ' + err.message);
   }
 }
 
@@ -174,20 +220,17 @@ async function showLeaderboard(level) {
   const snapshot = await getDocs(q);
   let html = '<table><tr><th>Rank</th><th>Username</th><th>Time (s)</th></tr>';
   let rank = 1;
-
-  snapshot.forEach((doc) => {
+  snapshot.forEach(doc => {
     const data = doc.data();
     if (data.level === level) {
       html += `<tr><td>${rank++}</td><td>${data.username}</td><td>${data.time}</td></tr>`;
     }
   });
-
   html += '</table>';
   leaderboard.innerHTML += html;
   leaderboard.style.display = 'block';
   gameArea.style.display = 'none';
 }
 
-// Footer branding
-footer.innerHTML = `Built by @xiipher <img src="assets/logo.png" alt="Anoma logo" height="24"/> Intent Games`;
+footer.innerHTML = `Built by @xiipher <img src="assets/logo.png" alt="Anoma logo" height="24" /> Intent Games`;
 
