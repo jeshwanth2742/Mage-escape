@@ -26,7 +26,7 @@ let magePosition = { x: 0, y: 0 };
 let currentLevelMatrix;
 
 // -----------------------------
-// Level Definitions (No walls, only empty cells, mage start 'S' and goal 'E')
+// Level Definitions
 // -----------------------------
 const levels = {
   easy: [
@@ -70,14 +70,14 @@ document.getElementById('username-submit').addEventListener('click', () => {
 // -----------------------------
 // Start Level
 // -----------------------------
-function startLevel(level) {
+window.startLevel = function(level) {
   currentLevelMatrix = levels[level];
   generateGrid(currentLevelMatrix);
   startTime = Date.now();
 }
 
 // -----------------------------
-// Generate Grid with Mage and Goal
+// Generate Grid
 // -----------------------------
 function generateGrid(matrix) {
   const area = document.getElementById('game-area');
@@ -144,9 +144,6 @@ function moveMage(x, y) {
       cell.classList.remove('mage');
       cell.innerHTML = '';
 
-      if(currentLevelMatrix[rowIndex][colIndex] === 'S' || currentLevelMatrix[rowIndex][colIndex] === '') {
-        // empty cell
-      }
       if(currentLevelMatrix[rowIndex][colIndex] === 'E') {
         cell.classList.add('goal');
         cell.innerHTML = `<img src="assets/goal.png" alt="Goal">`;
@@ -205,7 +202,5 @@ setInterval(() => {
   }
 }, 100);
 
-// -----------------------------
 // Initial Leaderboard Load
-// -----------------------------
 updateLeaderboard();
