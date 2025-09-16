@@ -1,53 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mage Escape</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="icon" href="assets/logo.png" type="image/png" />
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="script.js" defer></script>
 </head>
 <body>
+
   <!-- Starting Page -->
-  <section id="start-page" style="display:block;">
-    <div class="logo-container">
-      <!-- Changed to start.png as the start logo -->
-      <img src="assets/start.png" alt="Start Logo" class="glow" />
-    </div>
-    <h1>Mage Escape</h1>
+  <div id="start-page">
+    <img src="assets/start.png" alt="Welcome Mage" class="glow-image">
+    <h1>Welcome Mage</h1>
     <button id="start-btn">Start Game</button>
-  </section>
+  </div>
 
-  <!-- Username Input -->
-  <section id="username-page" style="display:none;">
-    <h2>Enter Username</h2>
-    <input type="text" id="username-input" placeholder="Username" />
+  <!-- Username Page -->
+  <div id="username-page" style="display:none;">
+    <p>Enter your username:</p>
+    <input type="text" id="username-input" placeholder="Your username">
     <button id="play-btn">Play</button>
-  </section>
+  </div>
 
-  <!-- Level Selection -->
-  <section id="level-select-page" style="display:none;">
+  <!-- Level Selection Page -->
+  <div id="level-select-page" style="display:none;">
     <h2>Select Level</h2>
-    <button class="level-btn" data-level="easy">Easy (3x3)</button>
-    <button class="level-btn" data-level="medium">Medium (4x4)</button>
-    <button class="level-btn" data-level="hard">Hard (5x5)</button>
-  </section>
+    <button class="level-btn" data-level="easy">Easy</button>
+    <button class="level-btn" data-level="medium">Medium</button>
+    <button class="level-btn" data-level="hard">Hard</button>
+  </div>
 
   <!-- Game Area -->
-  <section id="game-area" style="display:none;">
-    <div id="timer">0</div>
-    <!-- Dynamic game grid appears here -->
-  </section>
+  <div id="game-page">
+    <p id="timer">Time: 0.0s</p>
+    <div id="game-area"></div>
+  </div>
 
   <!-- Leaderboard -->
-  <section id="leaderboard" style="display:none;">
-    <!-- Leaderboard entries will render here -->
-  </section>
+  <div id="leaderboard"></div>
 
   <!-- Footer -->
   <footer id="footer"></footer>
 
-  <script type="module" src="script.js"></script>
 </body>
 </html>
 
